@@ -1,7 +1,6 @@
 ---
-style_name: "{{style_meta.style_name}}"
-description: "{{style_meta.proposition}}"
-template_version: v0.5.2(R-94 Stage 6 three-way sync · delete TasselDivider/OutlinedPill/SpotlightGradient(theatre), Swiss ChapterStamp→ChapterBanner+ShadSeparator, drawn-horizon Hero-only note, Warm editorial banner clarify)
+style_name: {{style_meta.style_name_zh}}
+description: {{style_meta.description_zh}}
 ---
 
 ## 1. Brand & Style
