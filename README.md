@@ -131,6 +131,17 @@ Production examples (6 styles × ~58 historical Design Prompts) live in the comp
 - **New principle or case study**: edit `reference/99-principles.md` or `reference/case-studies.md` with a real-world bug + how to detect/avoid, then PR.
 - **Skill improvements**: SKILL.md / reference/ modules should stay short (200–500 lines each) — every line earns its place.
 
+### Cross-repo experience flow
+
+Real-world bugs and decisions from production work happen in [`design-prompt-management`](https://github.com/chrislau0098/design-prompt-management) projects — they first get recorded round-by-round in that repo's `history/Round-Log-<project>.md` (a project-specific journal, kept under version control with the prompts).
+
+Periodically (every 5–10 rounds, or after a phase wraps), Cowork (Claude Code) abstracts the generalisable lessons from those Round-Log entries into this repo's `reference/case-studies.md` and `reference/99-principles.md`, then PRs them upstream. This keeps the Skill's reference material grounded in real bugs without forcing every project-specific detail into the public Skill.
+
+Trigger conditions for an abstraction pass:
+- Cowork notices ≥3 new round entries since last audit, **or**
+- a designer flags a recurring issue ("this bug came back"), **or**
+- a phase completes (e.g. a new scenario stabilises).
+
 ---
 
 ## License
