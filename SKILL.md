@@ -25,27 +25,36 @@ The full principle index — including the rules above plus seven more (Hero ≠
 
 ## Workflow Overview
 
-Eight steps. Each step has a short `reference/0X-*.md` companion with concrete commands, decision rules, and pitfalls.
+Eight steps. R-101 reverses the old `generate → render → review` order to `render → review → extract Prompt` because the Design Example is the visual truth Chris iterates on, and the Prompt is now a frozen derivative that Opus auto-extracts from the Chris-confirmed Example. The Design System view is bounded by the Prompt (System ⊆ Prompt ⊆ Slot SoT).
+
+Each step has a short `reference/0X-*.md` companion with concrete commands, decision rules, and pitfalls.
 
 ```
-1. Init project           → reference/01-init.md
-2. Define roles           → reference/02-roles.md
-3. Define a scenario      → reference/03-scenario-define.md
+1. Init project              → reference/01-init.md
+2. Define roles              → reference/02-roles.md
+3. Define a scenario         → reference/03-scenario-define.md
    (PATTERN + Components)
-4. Extract style from     → reference/04-style-from-references.md
-   reference images       
-   (images → Slot JSON)
-5. Generate Design Prompt → reference/05-prompt-generate.md
-   (Slot + Template → md, via scripts/inject.py)
-6. Render in Vite         → reference/06-design-system-render.md
-   (Design System + Report Example views)
-7. Review                 → reference/07-prompt-review.md
-   (three-way sync + anti-slop + line-count)
-8. Iterate                → reference/08-iterate.md
-   (feedback → patch chain → re-inject → re-verify)
+4. Extract style from        → reference/04-style-from-references.md
+   reference images
+   (images → Slot JSON, the SoT)
+5. Render Design Example     → reference/05-design-example-render.md
+   (iframe + scroll-triggered animation +
+    manual width drag + Web / Mobile preset)
+6. Confirm Example +         → reference/05-prompt-generate.md
+   Auto-extract Prompt          ↳ Step B: Opus extracts Prompt
+   (Chris confirms Example          from confirmed Slot + Example
+    as HARD GATE before Step B)
+7. Review                    → reference/07-prompt-review.md
+   (Step 0 confirm gate + three-way Sync +
+    anti-slop + line economy ≤ 620)
+8. Iterate                   → reference/08-iterate.md
+   (inner loop = Slot → Example re-render,
+    outer loop = Step B re-extract after re-confirm)
 ```
 
-A new project usually starts at step 1; a new style inside an existing project starts at step 4; a feedback-driven change starts at step 8. The `99-principles.md` index is read-only — refer to it any time a design judgement is needed.
+View tab order in the renderer (matches the workflow): `Design Example | Design System | Design Prompt`. Example is leftmost because it is the iteration surface; System and Prompt are documentation surfaces that exist to verify the Example.
+
+A new project usually starts at step 1; a new style inside an existing project starts at step 4 (the Slot is the SoT, then jump to step 5 to look at the Example); a feedback-driven change starts at step 8 (inner loop if pre-confirmation, outer loop if post-confirmation Prompt regen). The `99-principles.md` index is read-only — refer to it any time a design judgement is needed.
 
 ---
 
@@ -55,13 +64,14 @@ When invoked, decide which step to enter based on what the user says. Default: a
 
 | User intent / trigger keywords | Enter | Tool / script |
 |---|---|---|
-| "新项目", "init", "scaffold project" | `reference/01-init.md` | `scripts/scaffold-project.sh` (planned) |
-| "新场景", "新页面类型", "scenario", "campaign report / waitlist / catalog / promotion" | `reference/03-scenario-define.md` | `scripts/scaffold-scenario.sh` (planned) |
-| "新风格", "新配图", "extract style", "from these references" | `reference/04-style-from-references.md` | `scripts/scaffold-style.sh` (planned) |
-| "生成 prompt", "重 inject", "render the prompt" | `reference/05-prompt-generate.md` | `scripts/inject.py` |
-| "看效果", "render", "open the renderer" | `reference/06-design-system-render.md` | `cd renderer && bun dev` |
-| "review", "三方 sync", "anti-slop", "check the prompt" | `reference/07-prompt-review.md` | `scripts/verify-three-way-sync.py` (planned) |
-| "iterate", "改一下", "Chris 反馈", feedback screenshots | `reference/08-iterate.md` | n/a — patch chain |
+| "新项目", "init", "scaffold project" | `reference/01-init.md` | `scripts/scaffold-project.sh` |
+| "新场景", "新页面类型", "scenario", "campaign report / waitlist / catalog / promotion" | `reference/03-scenario-define.md` | `scripts/scaffold-scenario.sh` |
+| "新风格", "新配图", "extract style", "from these references" | `reference/04-style-from-references.md` | `scripts/scaffold-style.sh` |
+| "看效果", "render the Example", "open the renderer", "iframe", "scroll 动效", "Web/Mobile preset", "调宽" | `reference/05-design-example-render.md` | `cd renderer && bun dev` |
+| "确认", "Chris OK", "confirmed", "派 Opus 抽 prompt", "auto-extract", "extract Prompt from Example" | `reference/05-prompt-generate.md` Step B | Opus sub-agent dispatch |
+| "生成 draft prompt", "Step A inject", "bootstrap draft", "重 inject" | `reference/05-prompt-generate.md` Step A | `scripts/inject.py` |
+| "review", "三方 sync", "System ⊆ Prompt", "anti-slop", "check the prompt" | `reference/07-prompt-review.md` | `scripts/verify-three-way-sync.py` (planned) |
+| "iterate", "改一下", "Chris 反馈", feedback screenshots | `reference/08-iterate.md` | n/a — two-loop patch chain |
 | "原则", "why", "is this slop?" | `reference/99-principles.md` | n/a — reference |
 | "派 sub-agent", "should I use Opus or Sonnet?" | `reference/02-roles.md` | n/a — reference |
 
@@ -117,11 +127,11 @@ vibe-page-design-prompt-management/
 │   ├── 01-init.md                      # new project bootstrap
 │   ├── 02-roles.md                     # Cowork main agent + sub-agent dispatch rules
 │   ├── 03-scenario-define.md           # PATTERN + Components for a new scenario
-│   ├── 04-style-from-references.md     # reference images → Slot JSON
-│   ├── 05-prompt-generate.md           # Slot + Template → Design Prompt md
-│   ├── 06-design-system-render.md      # launch Vite renderer, three views
-│   ├── 07-prompt-review.md             # three-way sync + anti-slop + line count
-│   ├── 08-iterate.md                   # feedback → patch chain → re-verify
+│   ├── 04-style-from-references.md     # reference images → Slot JSON (SoT)
+│   ├── 05-design-example-render.md     # iframe Example, the iteration surface (R-101)
+│   ├── 05-prompt-generate.md           # Step A inject draft + Step B Opus auto-extract
+│   ├── 07-prompt-review.md             # confirm-gate + Sync (System ⊆ Prompt) + anti-slop
+│   ├── 08-iterate.md                   # inner loop (Slot→Example) + outer loop (re-extract)
 │   └── 99-principles.md                # 12 core principles (generalised from Round-Log §1)
 ├── templates/
 │   └── prompt-template.md              # scenario-agnostic, Slot-driven prompt template

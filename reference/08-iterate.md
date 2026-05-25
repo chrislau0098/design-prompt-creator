@@ -1,11 +1,34 @@
 # 08 · Iterate on Feedback
 
-> Feedback arrives as text, screenshots, or an in-person walk-through. Iteration is: classify the feedback, decide the patch site, run the patch chain (Slot → template → re-inject → renderer → verify), and capture the round.
+> Feedback arrives as text, screenshots, or an in-person walk-through. Iteration is: classify the feedback, decide the patch site, run the patch chain, and capture the round. Under R-101 the chain has two distinct loops: a **fast inner loop** (Slot → Example re-render) that runs many times per style before Chris confirms, and a **slow outer loop** (Step B Prompt re-extract → review → re-confirm) that runs once per confirmed Example version.
+
+## Where iteration lives in the R-101 workflow
+
+```
+Inner loop · runs N times per style, no Prompt regen
+────────────────────────────────────────────────────
+  Slot tweak  →  re-render Example in iframe  →  Chris eyeballs  →
+                                                  ↓
+                                              not yet? loop
+                                                  ↓
+                                              "OK" / "confirmed"
+                                                  ↓
+Outer loop · runs once per confirmed Example, frozen artifact
+──────────────────────────────────────────────────────────────
+  Step B auto-extract (Opus) → Chris confirms Prompt →
+  06 prompt-review → commit Prompt → Round-Log §2 + §3
+```
+
+**The asymmetry matters.** The inner loop is cheap (Slot edit + Vite hot-reload). The outer loop is expensive (Opus dispatch + Chris re-read + Round-Log entries). Most iteration rounds end with no Prompt regen — the Slot tweak refined the Example but Chris is not yet confirming. Only when Chris signs off does the outer loop fire.
+
+This shifts iteration discipline from R-100's "always inject after every change" to R-101's "patch Slot, look at Example, decide if it is ready". Cowork's job is to keep the inner loop tight and to know when to escalate to the outer loop.
+
+**Prompt changes are always outer-loop.** Even a tiny Prompt fix (a misnamed ornament, a wrong weight) goes through the full sync chain: Slot or Example re-render to verify the fix's grounding, Chris re-confirm Example, Step B re-extract, Chris re-confirm Prompt. Never hand-edit the Prompt for anything but pure-deletion trim with `manual_override`.
 
 ## When to use this step
 
-- Chris (or any designer/PM) gives feedback after a render pass.
-- A `07-prompt-review.md` audit produced Blocking or High findings.
+- Chris (or any designer/PM) gives feedback after an Example render.
+- A `07-prompt-review.md` (renumbered as step 06 review) audit produced Blocking or High findings.
 - The team agreed to a small tuning round at the end of a phase.
 
 Do **not** use this step for:
@@ -80,22 +103,37 @@ Is the change a pure delete?
   → Renderer + template (and Slot if it declared the element).
 ```
 
-## The full sync chain
+## The two-loop sync chain (R-101)
 
-Once you have the patch site, run the **sync chain** (R-84 #11 + R-85 #14 — repeated drift was the example project's most-recurring class of bug):
+The pre-R-101 chain always re-injected the Prompt. R-101 splits the chain by which loop the patch belongs to.
 
-1. Edit the patch site.
-2. **If renderer changed inline DATA**: sync the same change to the Slot. Drift between inline and external Slot is the most common drift class.
-3. Re-inject the affected style(s): `python3 scripts/inject.py --slot <slot> --template <tpl> --out <new versioned md>`.
-4. Promote the previous produced md to `src/prompts-previous/<old file>.md`.
-5. Bump the Slot or template `version` if the change was meaningful (not a typo fix).
-6. Update Round-Log §3 version snapshot.
-7. Run the three reviews from `07-prompt-review.md` (three-way sync, anti-slop greps, line count).
-8. Open the renderer and look — DOM verify with `mcp__Claude_Preview__preview_eval` if there is any doubt.
-9. Cross-style click-through: did the patch leak to neighbours?
-10. Append Round-Log §2 entry: symptom → root cause → patch sites → verify proof → principle if abstractable.
+### Inner loop · Slot or renderer patch, no Prompt regen
 
-Skipping any of these is the source of most re-work. Step 2 is the single most-missed step; step 9 is the second.
+Use for: any pre-confirmation iteration. The Prompt is either absent or a stale Step A draft; do not re-extract until Chris confirms.
+
+1. Edit the patch site (Slot or renderer).
+2. **If renderer changed inline DATA**: sync the same change to the Slot. Inline-vs-external drift was the example project's most-recurring bug class (R-83, R-84, R-85, R-90).
+3. Re-render the Example: the renderer hot-reloads if `bun dev` is running; otherwise restart. Verify in the iframe.
+4. Cross-style click-through: did the patch leak to neighbours? (R-87 #18, R-92 #26 both started as single-pack patches that broke a neighbour.)
+5. Append a single inner-loop note to Round-Log §2 (short — `iter R-NN: Slot tweak <field> for <style>, re-render OK`). Do not bump Slot version yet; inner-loop rounds accumulate into one version bump at outer-loop fire.
+
+The inner loop has no Prompt-side steps. The Design Prompt tab in the renderer continues to show the Step A draft (or the previous Step B extract if one exists). It will look stale relative to the Example — that is expected during iteration.
+
+### Outer loop · Prompt regen after Chris confirms Example
+
+Use for: when Chris confirms an Example version and Cowork needs to extract the matching Prompt.
+
+1. Verify Chris's confirmation is recorded in Round-Log §2 with the Slot version and the confirmed Example URL.
+2. Bump the Slot version (`vN.M` → `vN.M+1` or `vN+1.0` for breaking changes) — this version is what the extracted Prompt's filename embeds.
+3. Fire `05-prompt-generate.md` Step B: dispatch Opus with the sub-agent stub prompt, pointing at the confirmed Slot + Example.
+4. Read Opus's returned Prompt md. If Chris flags drift, re-dispatch with a delta prompt; if Chris confirms, commit.
+5. Promote the previous produced md to `src/prompts-previous/<old file>.md` (so Diff view works).
+6. Update Round-Log §3 version snapshot with the new Slot version and the extracted Prompt version.
+7. Run the three reviews from `06-prompt-review.md` (Step 0 gate confirms the two Chris-OKs are recorded; then three-way sync, anti-slop greps, line count).
+8. DOM verify the Example one more time post-extract — `mcp__Claude_Preview__preview_eval` against the iframe URL — to confirm nothing shifted between Chris's confirm and the commit.
+9. Append Round-Log §2 outer-loop entry: symptom (the iteration reason) → root cause → patch sites → both confirmation timestamps → verify proof → principle if abstractable.
+
+Skipping inner-loop step 2 is the single most-missed step. Skipping outer-loop step 1 (verifying confirmation is recorded) is the second — it lets a Prompt extract bake in choices Chris never signed off on.
 
 ## Worked example: R-93 #29 B1 (chart_ramp green→amber)
 

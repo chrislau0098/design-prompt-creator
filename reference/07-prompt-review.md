@@ -1,38 +1,72 @@
-# 07 · Review the Design Prompt
+# 06 · Review the Design Prompt
 
-> The Design Prompt is the artifact the weak model will read. Review it across three axes: **three-way sync** (Prompt ↔ Design System ↔ Report Example), **anti-slop** (the rubric in `Slop-Taxonomy.md`), and **line economy** (≤ 620 lines, every word constrains).
+> The Design Prompt is the artifact the weak model will read. Review it across three axes: **three-way sync** (System ⊆ Prompt ⊆ Slot SoT, with Example as the visual anchor), **anti-slop** (the rubric in `Slop-Taxonomy.md`), and **line economy** (≤ 620 lines, every word constrains).
 
 ## When to use this step
 
-- After `05-prompt-generate.md` produced or re-produced a Design Prompt md.
-- After `08-iterate.md` patched a Slot, the template, or the renderer.
+- After `05-prompt-generate.md` Step B produced a fresh auto-extracted Design Prompt md from a Chris-confirmed Example.
+- After `08-iterate.md` patched a Slot post-confirmation (which forced an Example re-render + re-confirm + Step B re-extract).
 - Periodic audit (every Phase end) of all styles, regardless of which one was last touched.
 
 Do **not** use this step for:
-- The first creative judgement on whether the style "feels right" — that is `06-design-system-render.md`. Review here is about *invariants and drift*, not taste.
+- The first creative judgement on whether the style "feels right" — that is `05-design-example-render.md`. Review here is about *invariants and drift*, not taste.
+- Reviewing a Step A draft Prompt. Drafts are bootstrap scaffolding; review fires against the Step B final extract only.
+
+## Step 0 · Confirm the Design Example (gate)
+
+Before any of the three review axes run, this step gates on **two** Chris confirmations from earlier in the workflow:
+
+1. **Example confirmation** (from `05-design-example-render.md` step 9) — Chris signed off that the iframe-rendered Example for this style version is the visual target.
+2. **Prompt confirmation** (from `05-prompt-generate.md` Step B.3) — Chris signed off that the Opus-extracted Prompt md accurately describes the confirmed Example.
+
+If either is missing, **stop here**. Reviewing a Prompt that Chris has not confirmed wastes the audit and risks blessing drift. Common failure modes that bypass this gate:
+
+- Cowork re-extracts the Prompt after a small Slot tweak without sending the regenerated Example back to Chris for re-confirmation. The new Prompt may describe an Example Chris never saw.
+- An iteration round patches the produced md directly (no Step B re-fire) and someone runs the audit assuming the md is the source of truth. The Slot, the Example, and the Prompt have all drifted apart.
+- Sub-agent dispatch returns a Prompt md without proof that Chris re-confirmed. Round-Log §2 must show both confirmation timestamps for the current version.
+
+The fix in every case: go back to step 05, re-render the Example for the current Slot version, get Chris confirmation, fire Step B, get Chris confirmation on the Prompt, **then** come here.
 
 ## The three review axes
 
 ### A · Three-Way Sync
 
-This is Principle 12 in `reference/99-principles.md` and the most-quoted rule in the example project after R-94. Three artifacts describe the same style; they must agree.
+This is Principle 12 in `reference/99-principles.md` and the most-quoted rule in the example project after R-94. Three artifacts describe the same style; under R-101 the relationship is **subset, not equality**.
 
 ```
-Design Prompt md   ⇄   Design System view   ⇄   Report Example view
-(what the weak         (what the Slot           (what actually
- model reads)           declares)                renders)
+                   Slot JSON  (Source of Truth — atomic + molecular + ornament)
+                       │
+                       │  Step B auto-extract (Opus, gated on Chris confirm)
+                       ↓
+                  Design Prompt md
+                  (what the weak model reads — describes only what the Example renders)
+                       │
+                       │  Derivative — System renders what Prompt names
+                       ↓
+                Design System view
+                (atomic + molecular tokens the Prompt actually names)
+
+                Design Example  (iframe rendering of Slot, the visual anchor)
+                  ↑ Prompt is extracted from this; System is bounded by this via the Prompt
 ```
 
-**Hard rules:**
+**The subset relationship (System ⊆ Prompt ⊆ Slot):**
 
-1. Every ornament the Design Prompt names must be declared in the Slot (and so appear in Design System view's Ornaments showcase) **and** must actually render in Report Example view.
-2. Every token the Slot declares must be described in the Design Prompt **and** used somewhere in Report Example.
-3. Every visual element in Report Example must come from the Slot **and** be described in the Design Prompt.
+- The **Slot** is the full atomic + molecular + ornament SoT. It may declare tokens the current Example does not surface (held in reserve for future Examples).
+- The **Prompt** describes only what the confirmed Example actually renders. If the Example does not show an ornament, the Prompt does not name it — even if the Slot declares it.
+- The **System view** showcases only what the Prompt names. If the Prompt does not describe a token, the System tab does not surface it as a documented element.
 
-**Drift symptoms** (taken from R-93 #31 D3 audit):
-- Design Prompt names `GoldenHairline` as the chapter divider. Slot declares `divider.golden_hairline`. Report Example renders a plain `<hr>` instead. → Drift.
-- Slot has `chart_ramp` of 4 hue values. Design Prompt describes single-hue ramp. Report Example renders Tailwind default palette. → Drift.
-- Report Example renders a `Cinnabar Imprint` ornament at Hero. Slot has no `cinnabar` field. Design Prompt does not mention it. → Drift (the ornament is undocumented).
+**Hard rules (R-101 update):**
+
+1. Every ornament the Design Prompt names must (a) be declared in the Slot, (b) actually render in the confirmed Example, and (c) appear in the System tab's Ornaments showcase. All three or none.
+2. Every visual element in the confirmed Example must be described in the Design Prompt **and** trace back to a Slot field. An element in the Example that has no Slot field is a renderer bug; an element in the Slot that does not appear in the Example is dormant and should be either removed from the Slot or kept silent in the Prompt + System.
+3. The System tab may not surface a token that the Prompt does not name. If you see a System entry for "Cinnabar Imprint" but the Prompt's md does not mention `Cinnabar`, either the System tab is showing a dormant Slot field (fix the System filter) or the Prompt is missing a description (fix the Prompt via a Step B re-dispatch).
+
+**Drift symptoms** (taken from R-93 #31 D3 audit, re-framed for R-101):
+- Design Prompt names `GoldenHairline` as the chapter divider. Slot declares `divider.golden_hairline`. The confirmed Example renders a plain `<hr>` instead. → Drift (Example does not match what Prompt says; either re-render the Example until it matches Slot, or re-extract the Prompt to describe the actual Example).
+- Slot has `chart_ramp` of 4 hue values. Design Prompt describes single-hue ramp. Confirmed Example renders Tailwind default palette. → Drift (all three artifacts disagree; the Example is the visual anchor, decide what Chris actually confirmed and re-sync from there).
+- Confirmed Example renders a `Cinnabar Imprint` ornament at Hero. Slot has no `cinnabar` field. Design Prompt does not mention it. → Drift (renderer is rendering something the Slot does not capture — a renderer bug; either add the Slot field and re-extract the Prompt, or remove the ornament from the renderer).
+- Slot declares `divider.cinnabar_bar`. The confirmed Example does not render it. Prompt correctly omits it. System tab surfaces "Cinnabar Bar" anyway. → Not drift in the Prompt, but the System tab is over-surfacing (it should only show what Prompt names). Fix the System filter.
 
 **Verify proof:**
 
@@ -47,10 +81,11 @@ python3 scripts/verify-three-way-sync.py \
 Until the script ships, do the audit manually:
 
 1. List every ornament / component in the Design Prompt (`grep -i 'SealStamp\|HairlineRule\|...'`).
-2. Cross-reference against the Slot's `dividers`, `ornaments`, `hero_shader` fields.
-3. Open the renderer and `document.querySelectorAll('[data-seal-stamp]')` etc. — each named element must appear with a non-zero count.
+2. Cross-reference against the Slot's `dividers`, `ornaments`, `hero_shader` fields — each named element in the Prompt must trace to a Slot field.
+3. Open the Design Example iframe and `document.querySelectorAll('[data-seal-stamp]')` etc. — each Prompt-named element must appear with a non-zero count in the Example. Every Example element should map back to a Prompt sentence; if not, the Prompt is incomplete.
+4. Open the Design System tab — each entry should appear in the Prompt's prose. If System surfaces a Slot field the Prompt does not name, the System filter is too loose.
 
-Any mismatch → patch the lagging artifact. The decision rule is: **the Slot is the source of truth**. Update the Design Prompt to describe what the Slot declares; update the renderer to render what the Slot declares. If the Slot is wrong, fix it once, then re-inject and re-render — do not paper either side.
+Any mismatch → patch the lagging artifact. The decision rule under R-101: **the Slot is the SoT, the Example is the visual anchor, the Prompt describes the confirmed Example, the System surfaces what the Prompt names**. If the Prompt drifts from the Example, re-fire Step B from the confirmed Slot version (do not hand-edit the Prompt unless it is pure-deletion trim). If the Example drifts from the Slot, fix the renderer (this is a renderer bug, not a Prompt bug). If the Slot itself is wrong, fix it, re-render the Example, get Chris re-confirmation, then re-fire Step B.
 
 ### B · Anti-slop
 
