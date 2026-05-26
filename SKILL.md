@@ -58,6 +58,20 @@ A new project usually starts at step 1; a new style inside an existing project s
 
 ---
 
+## Style Path Routing
+
+Two entry paths for defining a new style. Choose based on whether reference images are available.
+
+**Option A · Fixed Style (reference-driven)**
+Reference images + brief → Slot JSON (SoT) → inject draft → Example render → Chris confirms → Opus auto-extracts Prompt. The Slot is the source of truth; Three-Way Sync invariant: `System ⊆ Prompt ⊆ Slot SoT`. Start at `reference/04-style-from-references.md`.
+
+**Option B · Default Config (dial-driven, no references)**
+No reference images needed. Chris opens `http://localhost:5173/?style=default` and adjusts 8 URL query dials (mode / brand_color / lightness_shift / font_family / hero_shader / radius / density / accent_strategy) in the DialPanel. The default Prompt md derives tokens, fonts, and shader config from the dial values and reflects them immediately in the Example + Design System views. The URL is the source of truth; Three-Way Sync invariant: `Rendered DOM ⊆ Prompt rules ⊆ URL-query dial set`. See `reference/04-style-from-references.md` § Option B and the full spec at `reference/09-default-prompt-spec.md`.
+
+When Chris is satisfied with a dial combination, the URL captures the configuration as-is. Freezing that combination as a new fixed style (converting URL dials → a named Slot JSON) is a future phase and not required.
+
+---
+
 ## Decision Routing
 
 When invoked, decide which step to enter based on what the user says. Default: ask one clarifying question only if the trigger is ambiguous (per global "Auto Mode" — make the reasonable call, they will redirect).
@@ -66,7 +80,8 @@ When invoked, decide which step to enter based on what the user says. Default: a
 |---|---|---|
 | "新项目", "init", "scaffold project" | `reference/01-init.md` | `scripts/scaffold-project.sh` |
 | "新场景", "新页面类型", "scenario", "campaign report / waitlist / catalog / promotion" | `reference/03-scenario-define.md` | `scripts/scaffold-scenario.sh` |
-| "新风格", "新配图", "extract style", "from these references" | `reference/04-style-from-references.md` | `scripts/scaffold-style.sh` |
+| "新风格", "新配图", "extract style", "from these references" | `reference/04-style-from-references.md` Option A | `scripts/scaffold-style.sh` |
+| "default 风格", "dial 调参", "自定义颜色", "no references", "快速试一套" | `reference/04-style-from-references.md` Option B | `bun dev` + DialPanel |
 | "看效果", "render the Example", "open the renderer", "iframe", "scroll 动效", "Web/Mobile preset", "调宽" | `reference/05-design-example-render.md` | `cd renderer && bun dev` |
 | "确认", "Chris OK", "confirmed", "派 Opus 抽 prompt", "auto-extract", "extract Prompt from Example" | `reference/05-prompt-generate.md` Step B | Opus sub-agent dispatch |
 | "生成 draft prompt", "Step A inject", "bootstrap draft", "重 inject" | `reference/05-prompt-generate.md` Step A | `scripts/inject.py` |

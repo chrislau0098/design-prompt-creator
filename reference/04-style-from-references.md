@@ -155,3 +155,63 @@ In Round-Log §3 add a row: `<handle>: src/data/<slug>.slot.json v0.1 (round NN)
 - **Inventing schema fields.** The schema is closed. If a style "needs" a new field, propose a schema extension first (with `_comment` documenting the new field and a Round-Log entry), then add it to the schema, then to one Slot. Do not add ad-hoc fields scattered across Slots.
 - **Skipping the renderer judgement pass.** A schema-valid Slot can still produce a page that does not look like the references. The Slot is the spec; the renderer is the truth. Always look.
 - **Re-extracting from references when you should be iterating.** If the existing Slot is 80% right, do not throw it out. Open `08-iterate.md` and patch the specific tokens that are off.
+
+---
+
+## Option B · Default Config Path (no references)
+
+Use when Chris wants to try a custom parameter combination without collecting reference images first. The default style is a parameterized prompt that derives tokens, fonts, and shader config from 8 URL query dials — no Slot JSON required.
+
+**Entry point:** `http://localhost:5173/?style=default`
+
+### Dial table
+
+| Dial | Type | Default | Range |
+|------|------|---------|-------|
+| `mode` | enum | `light` | `light` / `dark` |
+| `brand_color` | hex | `#1E40AF` | any 6-digit hex; `?named=<key>` for presets |
+| `lightness_shift` | int | `0` | −100 … +100 (maps to ±0.15 L on primary) |
+| `font_family` | enum | `geometric` | `geometric` / `editorial` / `technical` / `warmth` / `impact` / `ceremonial` |
+| `hero_shader` | enum | `mesh` | `mesh` / `grain` / `dithering` / `none` |
+| `radius` | enum | `sharp` | `sharp` / `crisp` / `soft` / `friendly` / `playful` |
+| `density` | enum | `balanced` | `sparse` / `balanced` / `dense` |
+| `accent_strategy` | enum | `mono` | `silent` / `mono` / `semantic` |
+
+Full dial semantics — color expansion algorithm, font stacks, shader numeric ranges, density spacing values — are in `reference/09-default-prompt-spec.md`.
+
+### Workflow
+
+1. Open `http://localhost:5173/?style=default`. The DialPanel renders on the right side.
+2. Adjust the 8 dials (main color, font, shader, radius, density, accent, mode, lightness). The Example and Design System views update immediately.
+3. Use manual width drag and Web / Mobile presets (same as Option A) to judge across viewports.
+4. When satisfied, the URL query string is the complete configuration record — copy it as the source of truth.
+5. Optionally continue to derive a new fixed style by converting the dial combination into a named Slot JSON (future phase — not required for current use).
+
+### Three-Way Sync (default revision)
+
+Fixed-style invariant: `System ⊆ Prompt ⊆ Slot SoT`.
+
+Default invariant: `Rendered DOM ⊆ Prompt rules ⊆ URL-query dial set`.
+
+- URL query is the SoT (replaces slot.json).
+- Prompt md declares what each dial does and how tokens derive.
+- System view renders one dial-set materialization; regenerates on query change.
+- Example iframe loads `?style=default&...` and reflects current dial values.
+
+Any drift between what the URL specifies, what the Prompt rules declare, and what the DOM renders is a Three-Way Sync violation — same class of bug as Option A drift.
+
+### Forbidden combinations (HARD)
+
+Do not combine:
+- `impact` + `playful` radius — visual whiplash
+- `editorial` + `dense` — undermines reading rhythm
+- `ceremonial` + `semantic` accent — color budget collapse
+- `technical` + `mesh` shader — readability conflict on data sections
+
+### Prompt md constraints
+
+The default Prompt md (`prompts/.../default/v0.1.md`) follows the same hard rules as all Design Prompt mds:
+- ≤ 600 lines
+- No metadata / source URLs / `Last updated` / `Inspired by`
+- No EXAMPLE sections, no few-shot React/CSS snippets
+- Every sentence constrains; no decorative prose
