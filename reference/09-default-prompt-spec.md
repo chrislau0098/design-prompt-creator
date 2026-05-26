@@ -6,18 +6,40 @@ Boundary: default ≠ replacement of fixed styles. Default = "style factory"; fi
 
 ## Dial system
 
+### Primary dials (shown by default in DialPanel)
+
 | Dial | Type | Default | Allowed values |
 |------|------|---------|----------------|
 | `mode` | enum | `light` | `light` / `dark` |
 | `brand_color` | hex string | `#1E40AF` | any valid 6-digit hex; also accepts named presets via `?named=` |
 | `lightness_shift` | int −100–+100 | `0` | negative = darker · positive = lighter; maps to ±0.15 L offset on primary |
 | `font_family` | enum | `geometric` | `geometric` / `editorial` / `technical` / `warmth` / `impact` / `ceremonial` |
-| `hero_shader` | enum | `mesh` | `mesh` / `grain` / `dithering` / `none` |
-| `radius` | enum | `sharp` | `sharp` (0px) / `crisp` (2px) / `soft` (6px) / `friendly` (12px) / `playful` (16px) |
-| `density` | enum | `balanced` | `sparse` / `balanced` / `dense` |
+
+### Advanced dials (collapsed behind `[+] 高级` toggle; auto-set by STYLE_PRESETS when font_family changes)
+
+| Dial | Type | Default (per STYLE_PRESETS) | Allowed values |
+|------|------|---------|----------------|
+| `hero_shader` | enum | from preset | `mesh` / `grain` / `dithering` / `none` |
+| `radius` | enum | from preset | `sharp` (0px) / `crisp` (2px) / `soft` (6px) / `friendly` (12px) / `playful` (16px) |
+| `density` | enum | from preset | `sparse` / `balanced` / `dense` |
 
 `neutral_temperature` removed — internal tokens always use branded chroma (C 0.008 light / 0.012 dark). No user-facing dial.
 `accent_strategy` removed — always `mono` (bordered). `card_border` fixed to `bordered`.
+
+URL query still supports all 7 dials for sharing advanced configurations. Missing advanced params fall back to STYLE_PRESETS[font_family] defaults.
+
+## Style Presets
+
+Per-font-family default trio for the 3 advanced dials. Changing `font_family` auto-applies the preset.
+
+| font_family | radius | density | hero_shader |
+|-------------|--------|---------|-------------|
+| **geometric** | sharp | balanced | mesh |
+| **editorial** | sharp | sparse | mesh |
+| **technical** | crisp | dense | dithering |
+| **warmth** | friendly | balanced | grain |
+| **impact** | crisp | balanced | mesh |
+| **ceremonial** | sharp | sparse | mesh |
 
 Named color presets (`?named=<key>`): `red` `crimson` `orange` `amber` `green` `teal` `blue` `indigo` `purple` `pink` `slate` `black`. Priority: `?color=` > `?named=` > default.
 
@@ -78,20 +100,20 @@ All neutrals (surface / foreground / border / chart-hover) **share the same `pH`
 
 ## Font family dial
 
-`--body-stack` separates Display from Body — each family now has an explicit body font var injected alongside `--display-stack` and `--sans-stack`.
+4-role font architecture: `--title-stack` / `--number-stack` / `--body-stack` / `--mono-stack`.
+`--display-stack` and `--sans-stack` retained as backward-compat aliases for 6 fixed styles.
 
-| Family | Latin Display | 中文 Display | 中文 Body (`--body-stack`) | Scope |
-|--------|---------------|--------------|----------------------------|-------|
-| **geometric** *(default)* | Geist / Helvetica Neue | 思源黑体 700 (or MiSans / 鸿蒙) | 思源黑体 400 | 科技 / 通用 / 商务 / 极简 |
-| **editorial** | Fraunces / Spectral | 思源宋体 700 | 思源宋体 400 (Noto Serif SC) | 文艺 / 阅读 / 杂志 |
-| **technical** | JetBrains Mono / IBM Plex Mono | 思源黑体 700 + tnum | 思源黑体 400 | SaaS / fintech / 数据 |
-| **warmth** | DM Sans / Outfit | 霞鹜文楷 | 思源黑体 400 | 温暖 / 教育 / 文化 |
-| **impact** | Druk / Bebas Neue | 优设标题黑 or 得意黑 (Smiley Sans) | 思源黑体 400 | 运动 / 户外 / 硬核 |
-| **ceremonial** | Playfair Display / Cinzel | 演示魁本楷 or 马善政毛笔 | 朱雀仿宋 / FZShuSong-Z01 / 方正书宋 | 庆典 / 国潮 / luxury |
+| Family | `--title-stack` (中英混排) | `--number-stack` (KPI/数字) | `--body-stack` (正文) | `--mono-stack` (等宽/meta) |
+|--------|---------------------------|-----------------------------|-----------------------|---------------------------|
+| **geometric** | Geist · Noto Sans SC · PingFang SC | Geist · Noto Sans SC | Noto Sans SC · PingFang SC | Geist Mono · JetBrains Mono |
+| **editorial** | Fraunces · Noto Serif SC · Spectral · Songti SC | Fraunces · Spectral | Noto Serif SC · Source Han Serif SC | IBM Plex Mono |
+| **technical** | JetBrains Mono · Noto Sans SC · IBM Plex Mono | JetBrains Mono · IBM Plex Mono | Noto Sans SC · PingFang SC | JetBrains Mono |
+| **warmth** | DM Sans · LXGW WenKai TC · Outfit · 霞鹜文楷 | DM Sans · Outfit | Noto Sans SC · PingFang SC | DM Mono · JetBrains Mono |
+| **impact** | Bebas Neue · Anton · Smiley Sans · 得意黑 · Noto Sans SC | Bebas Neue · Anton | Noto Sans SC · PingFang SC | JetBrains Mono |
+| **ceremonial** | Playfair Display · Ma Shan Zheng · Cinzel · 马善政毛笔楷书 | Playfair Display · Cinzel | Zhuque Fangsong · 朱雀仿宋 · Noto Serif SC | IBM Plex Mono |
 
-Stack ordering rule: **中文 family first** when CJK glyph shape differs notably (warmth / editorial / ceremonial / impact). Otherwise Latin first acceptable.
-
-Weight floor (Display): geometric 700 · editorial 700 · technical 700 · warmth 400-500 · impact 800 · ceremonial 700. Body always 400.
+`--number-stack` uses `font-feature-settings: "tnum"` for tabular numerals on KPI / hero numbers.
+Body always weight 400. `--title-stack` and `--number-stack` allow up to 700.
 
 ## Hero shader dial
 
