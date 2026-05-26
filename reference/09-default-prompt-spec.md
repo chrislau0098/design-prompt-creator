@@ -15,12 +15,9 @@ Boundary: default ≠ replacement of fixed styles. Default = "style factory"; fi
 | `hero_shader` | enum | `mesh` | `mesh` / `grain` / `dithering` / `none` |
 | `radius` | enum | `sharp` | `sharp` (0px) / `crisp` (2px) / `soft` (6px) / `friendly` (12px) / `playful` (16px) |
 | `density` | enum | `balanced` | `sparse` / `balanced` / `dense` |
-| `accent_strategy` | enum | `mono` | `silent` / `mono` / `semantic` |
-| `card_border` | enum | (auto from accent) | `borderless` / `bordered` |
 
 `neutral_temperature` removed — internal tokens always use branded chroma (C 0.008 light / 0.012 dark). No user-facing dial.
-
-`card_border` auto-derives: `silent` → `borderless`; `mono` / `semantic` → `bordered`. User may override.
+`accent_strategy` removed — always `mono` (bordered). `card_border` fixed to `bordered`.
 
 Named color presets (`?named=<key>`): `red` `crimson` `orange` `amber` `green` `teal` `blue` `indigo` `purple` `pink` `slate` `black`. Priority: `?color=` > `?named=` > default.
 
@@ -167,7 +164,6 @@ Default style is configured via URL query (no slot.json):
 &hero=mesh
 &radius=sharp
 &density=balanced
-&accent=mono
 ```
 
 Missing params fall back to defaults from Dial table. Invalid values rejected client-side.
