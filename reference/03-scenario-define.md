@@ -148,12 +148,64 @@ The Design Prompt md should be ≤ 620 lines and contain 0 unrendered tokens. If
 
 In `Round-Log.md` §2 append a round entry describing the new scenario. In §3 update the version snapshot. In `AGENTS.md` add the scenario to the project's scenario list.
 
+## Three-piece sync — Design Example + Design System + Design Prompt (R-112)
+
+A scenario is only "shipped" when all three artifacts exist and stay in sync:
+
+| Artifact | Lives in | Truth for |
+|---|---|---|
+| **Design Example** component code | `design-prompt-management/src/views/<scenario>-example/` | What renders. The visual truth Chris iterates on. |
+| **Design System** view + Slot/Dial registry | `design-prompt-management/src/views/design-system/` + `src/data/` | What the Slot declares. Token catalog. |
+| **Design Prompt** md | `prompts/<scenario-dir>/<style>/v*.md` | What the weak model reads. Frozen derivative. |
+
+Three-way sync invariant: **Design System ⊆ Design Prompt ⊆ Design Example DOM**. Any drift = a real bug.
+
+Adding a new scenario means producing all three pieces — not just the Prompt. The renderer's `src/lib/scenarios.ts` registers each scenario; until its Example component code lands, the renderer surfaces a `<ScenarioPlaceholder>` that points back here.
+
+### 6.5 · Generate Design Example component code (NEW)
+
+The Design Example's layout must be **scenario-specific**, fundamentally different from sibling scenarios. A waitlist Example is not a campaign-report Example with different copy — it has a different chapter list, different archetypes, different dominant moves (per the PATTERN.md you wrote in step 3).
+
+Workflow:
+
+1. **Read PATTERN.md you just wrote.** That is the structural brief.
+2. **Read components.md.** That is your component vocabulary — do not invent new ones.
+3. **Load the right design skills** before opening the editor. The Example needs taste-level review, not just engineering correctness:
+   - `design-principles` — the project's design identity skill (load first if available)
+   - `impeccable` — design / a11y / craft critique
+   - `design-taste-frontend` — typographic taste, color harmony, rhythm
+   - `emil-design-eng` — motion + interaction polish
+
+   If a skill is not installed, install it before continuing. The Example's quality bar is set by these skills, not by "it compiles". A scenario whose Example only passes `pnpm build` and was never run through a design skill is not done.
+
+4. **Write the components** under `design-prompt-management/src/views/<scenario>-example/`. Each chapter from PATTERN.md → one component. Reuse `motion / paper-shaders / shadcn / recharts` only (the closed three-library rule from components.md).
+5. **Wire the entry view** `<Scenario>ExampleView.tsx` that composes the chapters in PATTERN order. This is what the renderer's main area mounts when `activeScenario === '<scenario>'`.
+6. **Run the design skills on the rendered Example** — load each skill, point it at the live renderer (`http://localhost:5173/?scenario=<handle>`), capture critique. Patch the Example components based on the critique. **Iterate until each skill returns a verdict you would defend.**
+7. Verify the Example, the new Slot, and the Design Prompt md all describe the same things — three-way Sync.
+
+The Example is where taste lives. Do not skip the design-skill loop and ship straight to Prompt extraction.
+
+### 7.5 · Register the scenario in the renderer (NEW)
+
+Open `design-prompt-management/src/lib/scenarios.ts` and:
+
+1. Add the scenario to `SCENARIOS_REGISTRY` with status `'shipped'`.
+2. Fill in `styleKeys` with the styles available for this scenario.
+3. In `App.tsx`'s `buildStyleGroupsForScenario`, add a branch for the new scenario that returns the grouping you want in the sidebar.
+4. In `App.tsx`'s main area routing, add the conditional render for the new scenario's Example view (mirroring the existing `campaign-report` branches).
+5. The renderer auto-removes the `<ScenarioPlaceholder>` for any scenario flipped to `'shipped'` — you do not need to delete a placeholder.
+
+If the new scenario is not yet `'shipped'`, leave it as `'stub'` in the registry — the placeholder will continue to surface it in the sidebar as a discovery affordance, with `reference/03-scenario-define.md` workflow in the body.
+
 ## Definition of done
 
 - `scenarios/<handle>/` contains `PATTERN.md` + `components.md` + `template.md`.
 - At least one Slot renders against the template with 0 unrendered placeholders.
-- The renderer shows the resulting Design Prompt under its Design Prompt tab.
-- Round-Log §2 has a new entry for this scenario.
+- `design-prompt-management/src/views/<scenario>-example/` contains real components (not placeholders), composed in PATTERN order.
+- The renderer shows the new scenario's Design Example, Design System, and Design Prompt under all three tabs — all three updated in sync.
+- The Example was iterated under `design-principles` + at least 2 of `impeccable / design-taste-frontend / emil-design-eng` until the verdicts are defensible.
+- `SCENARIOS_REGISTRY` in `src/lib/scenarios.ts` lists the scenario as `'shipped'`.
+- Round-Log §2 has a new entry referencing the round + the three artifacts.
 
 ## Pitfalls
 

@@ -152,10 +152,13 @@ Record the confirmation in Round-Log §2 with the Slot version at the time. The 
 
 ## Scenario extension — when the renderer needs to learn a new scenario
 
-The current renderer's Design Example view is hard-coded for Campaign Report. Adding a new scenario (waitlist, catalog) requires forking the renderer:
+**R-112 update**: the renderer is now scenario-aware. `src/lib/scenarios.ts` is the SoT registry; `App.tsx` renders a sidebar scenario picker above the style picker. Stub scenarios surface a `<ScenarioPlaceholder>` in the main area pointing back to `reference/03-scenario-define.md`.
 
-- Add a `?scenario=<handle>` URL param.
-- Fork `src/views/design-example/` per scenario, or compose from per-component primitives.
-- Wire a top-level scenario picker (above the sidebar style picker, or to the right of view tabs).
+To extend the renderer for a new scenario:
 
-R-98+ goal in the example project's backlog is "scenario-aware renderer" — until then, treat the renderer as Campaign-Report-shaped for one scenario at a time. Multi-scenario renderer is on the roadmap; do not block style work waiting for it.
+1. Author the three-piece sync (Example components + System registry + Prompt md) per `reference/03-scenario-define.md` §§ 6.5 / 7.5.
+2. Flip the scenario in `SCENARIOS_REGISTRY` from `'stub'` → `'shipped'`.
+3. Add the scenario branch in `buildStyleGroupsForScenario` (for sidebar grouping) and in `<App>` main routing (for view mounting).
+4. The placeholder disappears automatically once the registry flag flips.
+
+The Example layout for the new scenario must be fundamentally different from sibling scenarios — different PATTERN, different archetypes, different rhythm. A waitlist Example sharing campaign-report's KPIChapter/TrendChapter is a sign you have not followed PATTERN.md; revisit step 3 of `03-scenario-define.md`.

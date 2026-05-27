@@ -14,10 +14,11 @@ Output per scenario × per style: one **Slot JSON** (style declaration), one **D
 ## Core Ideas
 
 1. **Three-layer architecture**: `PATTERN` (page skeleton, scenario-specific) ⊗ `STYLE` (a Slot JSON, plus a small per-style override pack) ⊗ `TEMPLATE` (one scenario-agnostic md with `{{slot.path}}` placeholders). Inject Slot+Template → final Design Prompt.
-2. **Three-Way Sync is sacred**: Design Prompt (what we tell the weak model) ⇄ Design System view (what the Slot declares) ⇄ Report Example view (what actually renders). Any drift = a real bug. Every Slot/Prompt/render change must re-pass the three-way audit.
-3. **Patch then verify with rendered proof**: do not trust file-grep after a change. Re-render in the Vite renderer (or browser DOM), eyeball it, then `wc -l` and `grep` for invariants. Sub-agents must return real DOM evidence in their report, never a self-graded "PASS".
-4. **Solve at the source, never patch over symptoms**: a too-loud Hero shader → tune `colorFront` lightness, not a `backdrop-filter blur` on top. A filled card looks weak → drop the border, never add one. Each extra layer is debt.
-5. **Design Prompt ≤ 620 lines, every word constrains**: weak-model context is precious. No metadata, no few-shot examples, no full code snippets, no historical narrative, no emoji checklists. If you cannot answer "would the output measurably degrade without this sentence?" → cut it.
+2. **Three-Way Sync is sacred**: Design Prompt (what we tell the weak model) ⇄ Design System view (what the Slot declares) ⇄ Design Example view (what actually renders). Any drift = a real bug. Every Slot/Prompt/render change must re-pass the three-way audit.
+3. **Three-piece sync on every new scenario (R-112)**: a scenario is "shipped" only when all three artifacts land together — Design Example component code (scenario-specific layout, *fundamentally different* from sibling scenarios), Design System view + Slot/Dial registry, Design Prompt md. The Example must be iterated under `design-principles` + at least 2 of `impeccable / design-taste-frontend / emil-design-eng` design skills. Skipping the design-skill loop is not allowed — install them if missing.
+4. **Patch then verify with rendered proof**: do not trust file-grep after a change. Re-render in the Vite renderer (or browser DOM), eyeball it, then `wc -l` and `grep` for invariants. Sub-agents must return real DOM evidence in their report, never a self-graded "PASS".
+5. **Solve at the source, never patch over symptoms**: a too-loud Hero shader → tune `colorFront` lightness, not a `backdrop-filter blur` on top. A filled card looks weak → drop the border, never add one. Each extra layer is debt.
+6. **Design Prompt ≤ 620 lines, every word constrains**: weak-model context is precious. No metadata, no few-shot examples, no full code snippets, no historical narrative, no emoji checklists. If you cannot answer "would the output measurably degrade without this sentence?" → cut it.
 
 The full principle index — including the rules above plus seven more (Hero ≠ chapter, weight ≤ 500 baseline, filled-vs-border, Hero shader rules, etc.) — lives in [`reference/99-principles.md`](reference/99-principles.md).
 
@@ -104,10 +105,12 @@ The Skill is multi-scenario. Each scenario lives under `scenarios/<scenario>/` a
 
 | Scenario | Status | Notes |
 |---|---|---|
-| `campaign-report` | **MVP shipped** — full reference example at `examples/vibe-view-campaign-report/` with 6 styles, 6 production Design Prompts, Vite renderer, Round-Log §1 12 principles distilled. | The reference scenario. Read it first. |
-| `product-promotion` | stub | Phase 6 sub-agent fills. |
-| `product-catalog` | stub | Phase 6 sub-agent fills. |
-| `waitlist` | stub | Phase 6 sub-agent fills. |
+| `campaign-report` | **shipped** — full reference example at `examples/vibe-view-campaign-report/` with 6 styles, 6 production Design Prompts, Vite renderer, Round-Log §1 12 principles distilled. | The reference scenario. Read it first. |
+| `product-promotion` | stub | Add via `reference/03-scenario-define.md`. Three-piece sync required: Example component code + System registry + Prompt md. |
+| `product-catalog` | stub | Same as above. |
+| `waitlist` | stub | Same as above. |
+
+The Vite renderer (`design-prompt-management`) is **scenario-aware as of R-112**: stub scenarios surface in its sidebar with a `<ScenarioPlaceholder>` pointing back to this skill's `reference/03-scenario-define.md`. Flipping a scenario from `stub` → `shipped` is done by editing `src/lib/scenarios.ts` in the renderer (see `reference/03-scenario-define.md` § 7.5 Register the scenario).
 
 **Scenario-agnostic vs scenario-specific:**
 
