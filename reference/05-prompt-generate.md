@@ -230,6 +230,26 @@ Cowork's discipline check before accepting a `manual_override`: would a re-extra
 - Chris has confirmed both the Example **and** the extracted Prompt.
 - Round-Log §2 has the extract entry with both confirmation timestamps; §3 updates the version snapshot.
 
+## Frontmatter `description` format (HARD)
+
+Every produced Prompt md carries a single-line YAML `description` in its frontmatter. This field is what downstream routers / catalogs / orchestrators read to decide whether to load THIS prompt vs another style. Keep it user-facing prose (not engineering jargon), and follow this three-part structure:
+
+1. **Visual language thesis** — one sentence opening with the style's core posture (克制 / 浓重 / 仪式感 / 工程感 / 等). List 3–5 grounded constraints (信息层级 / 留白 / 节奏 / 可读性 / 字重 / 等). Close with an integral observation phrased as three adjectives (例如 "干净、现代、专业"). No technical terms (no "OKLCH", no "dial", no "STYLE_PRESETS", no "shader").
+2. **Use-case catalog** — "适用于 [N 个典型场景 / 行业 / 页面类型]"。Examples: "产品介绍、品牌官网、作品集、企业展示、服务说明" for a generic web style; "年度复盘、季度战报、增长汇报、运营月报" for a report-oriented style. Aim for 4–6 concrete scenarios.
+3. **Fallback / activation rule** — for "default" / 通用基座 type prompts use "在无其他专用主题匹配时，默认使用本主题". For fixed style prompts use a triggering rule like "如果用户提到了'X / Y / Z' 可以用此风格" listing the brand mood / keyword triggers.
+
+Reference example for a default / generic web base:
+
+> 以克制、清晰的视觉语言为基础，强调良好的信息层级、舒适的留白、统一的版式节奏与稳定的可读性，整体呈现干净、现代、专业的网页观感。适用于大多数通用网页设计场景，如产品介绍、品牌官网、作品集、企业展示、服务说明等。在无其他专用主题匹配时，默认使用本主题
+
+Hard requirements:
+- Single line (YAML scalar — no `>` or `|` block syntax)
+- No 【场景通用基座】/【报告基座】etc. eyebrow prefixes — straight prose only
+- No technical terms (`dial` / `STYLE_PRESETS` / `OKLCH` / `shader` / `font_family` / `lightness_shift` 等)
+- No version numbers / changelog / "R-XXX 引入" metadata
+- ≤ 200 Chinese characters (plus light punctuation); routes need to fit in a console / sidebar / chip
+- Periods only between the three parts; final part ends without a period to keep the activation rule looking like a directive
+
 ## Pitfalls
 
 - **Firing Step B before Chris confirms.** The whole gate exists to keep the Prompt from baking in pre-confirmation choices. If the renderer's Design Prompt tab needs content during iteration, that is what the Step A draft is for.
