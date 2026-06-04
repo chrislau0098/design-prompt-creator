@@ -153,12 +153,8 @@ Weak models (doubao-seed-code 2.0, GPT-OSS-20B, similar) have precious context. 
 
 - Hard ceiling: **620 lines** (was 600 in early R-91; relaxed to 620 in R-95 #40 to allow Festive packs).
 - Every sentence answers "would the output measurably degrade without this?". If no, cut it.
-- **Strict zero tolerance:**
-  - Metadata (Source provenance, Last updated, Inspired by, inline `(source: ...)`).
-  - Few-shot examples (`## Example` sections, full code snippets).
-  - Emoji checklists (✅ / ❌ / 🚫 — use the words "do" / "don't" instead).
-  - Historical narrative ("In v0.2 we tried X, but Chris said...").
-  - Decorative repetition.
+- **Strict zero tolerance:** Metadata (Source provenance, Last updated, Inspired by, inline `(source: ...)`) · Few-shot teaching examples (`## Example` sections, ✓/❌ comparative pairs, narrative how-tos) · Emoji checklists (use the words "do" / "don't" instead) · Historical narrative ("In v0.2 we tried X, but Chris said...") · Decorative repetition.
+- **Inline-copy allowlist** — named decorative components copied verbatim as JSX references, no comparative pairs, no narrative: shader components (GrainGradient / MeshGradient / Dithering / GodRays) · AnimateNumber + parseDisplayValue · ChartTooltipCard · ChapterStamp · OutroSignature · DeltaIndicator · SpotlightGradient.
 
 Source: example project R-93 #30 C2, then R-95 #40 trim round. Chris's Memory files (`feedback_prompt_md_no_metadata.md`, `feedback_prompt_md_no_emoji_checklist.md`, `feedback_prompt_md_minimize_code.md`, `feedback_prompt_engineering_concise.md`) accumulate the long form.
 
@@ -220,6 +216,56 @@ A sub-agent self-grade is a *summary*; it compresses what they think they did. C
 - When the verify path is ambiguous (canonical vs worktree), verify on the *destination*, not the CWD (R-94 #35).
 
 Source: example project R-87 #18, R-89 #22, R-90 #24, R-94 #35 — four rounds where a "PASS" report hid a real bug. The principle hardened only after the fourth.
+
+---
+
+## Principle 15 · Complete removal + replacement beats override stacks
+
+When a vendor component's default styling requires 2+ stacked property overrides to suppress, and weak models cascade those overrides imperfectly, replace the vendor component with a plain primitive styled from scratch.
+
+| Wrong | Right |
+|---|---|
+| shadcn `<Card>` with `border-0 shadow-none ring-0` override stack | Plain `<div>` with `bg-[var(--surface-l2)] rounded-[12px] p-6` |
+| shadcn `<ChartTooltipContent>` with manual border/shadow overrides | Custom `ChartTooltipCard` — no border, no shadow by construction |
+
+Necessity rule (P13) applies — replace only when stacked overrides are required, never as a blanket primitive-substitution mandate.
+
+Source: example project v1.6 → v1.7 → v1.8 (R-134 round 3: 4-patch `ring-0` + `border-0` + `shadow-none` override stack failed across weak models; v1.8 simplified to full vendor removal + primitive replacement).
+
+---
+
+## Principle 16 · Suggested defaults + mood mapping beats keyword routing tables
+
+Keyword → enum routing tables are brittle for three reasons: out-of-table input has no fallback, multi-axis inputs are forced into a single match, and complexity grows quadratic as axes multiply. Replace with 4–6 mood → shader suggested defaults where the model picks flexibly within the approved set.
+
+Shader choice within the approved set (GrainGradient / MeshGradient / Dithering / GodRays) is flexible, but a shader MUST be chosen — never static CSS background, never skip (P7 cross-ref).
+
+| Wrong | Right |
+|---|---|
+| 7-row `keyword → font_family` enum routing table | 4–6 row `mood → shader` suggested defaults + flexible choice within approved set |
+
+P7 Hero 必含 shader 仍 non-negotiable;"flexible" 仅指 approved shader 之间软选,不指 shader 可选/可跳。
+
+Source: example project v1.7 (7-row keyword × font_family routing table) → v1.8 (5-row mood → shader suggested defaults + "shader choice is flexible" caveat).
+
+---
+
+## Principle 17 · Multi-metric font-size scales by column count
+
+When multiple focal numbers sit side-by-side in a grid row, font-size MUST scale down by column count. Weak models that ignore column count produce overlapping or clipped numbers.
+
+**Max-scale caps, not mandatory sizes** (drop one tier if number+unit risks overflow):
+
+| Columns | Max scale (desktop / mobile) | Use case |
+|---|---|---|
+| 1 (Hero focal) | text-[140px] / text-[64px] | Single anchor metric |
+| 2 | text-[56px] / text-[34px] | Comparison pair |
+| 3–4 | text-[40px] / text-[26px] | KPI row |
+| ≥5 | text-[32px] / text-[20px] | Dense cluster |
+
+Each cell: `min-w-0` + number `whitespace-nowrap`. Grid `gap-4`. Overlapping or clipped numbers are never acceptable.
+
+Source: example project v1.8 §3 Typography (Chris × research collaboration, 2026-06-04). Failure mode pre-v1.8: weak model ignored column count, applied Display Number scale uniformly, causing 3–4 column overlap.
 
 ---
 
